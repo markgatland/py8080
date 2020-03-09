@@ -39,7 +39,7 @@ class CPU:
         self._sign = False
         self._zero = False
         self._half_carry = False
-        self._parity = False  # odd or even
+        self._parity = False
         self._carry = False
         self._interrupt = False
         self._current_inst = 0  # current instruction
@@ -324,7 +324,6 @@ class CPU:
             self._cycles += 6
             return
         elif self._current_inst == 0xC4:
-            # if NZ, CALL adr
             condition = not self._zero
         elif self._current_inst == 0xCC:
             condition = self._zero
@@ -1453,7 +1452,7 @@ class CPU:
         self._instructions[0x05] = self._dcr
         self._instructions[0x06] = self._mvi_b
         self._instructions[0x07] = self._rlc
-        self._instructions[0x08] = self._unimplemented
+        self._instructions[0x08] = self._nop
         self._instructions[0x09] = self._dad_bc
         self._instructions[0x0A] = self._lda
         self._instructions[0x0B] = self._dcx
@@ -1462,7 +1461,7 @@ class CPU:
         self._instructions[0x0E] = self._mvi_c
         self._instructions[0x0F] = self._rrc
 
-        self._instructions[0x10] = self._unimplemented
+        self._instructions[0x10] = self._nop
         self._instructions[0x11] = self._lxi_de
         self._instructions[0x12] = self._sta
         self._instructions[0x13] = self._inx
@@ -1470,7 +1469,7 @@ class CPU:
         self._instructions[0x15] = self._dcr
         self._instructions[0x16] = self._mvi_d
         self._instructions[0x17] = self._ral
-        self._instructions[0x18] = self._unimplemented
+        self._instructions[0x18] = self._nop
         self._instructions[0x19] = self._dad_de
         self._instructions[0x1A] = self._lda
         self._instructions[0x1B] = self._dcx
@@ -1479,7 +1478,7 @@ class CPU:
         self._instructions[0x1E] = self._mvi_e
         self._instructions[0x1F] = self._rar
 
-        self._instructions[0x20] = self._unimplemented
+        self._instructions[0x20] = self._nop
         self._instructions[0x21] = self._lxi_hl
         self._instructions[0x22] = self._shld
         self._instructions[0x23] = self._inx
@@ -1487,7 +1486,7 @@ class CPU:
         self._instructions[0x25] = self._dcr
         self._instructions[0x26] = self._mvi_h
         self._instructions[0x27] = self._daa
-        self._instructions[0x28] = self._unimplemented
+        self._instructions[0x28] = self._nop
         self._instructions[0x29] = self._dad_hl
         self._instructions[0x2A] = self._lhld
         self._instructions[0x2B] = self._dcx
@@ -1496,7 +1495,7 @@ class CPU:
         self._instructions[0x2E] = self._mvi_l
         self._instructions[0x2F] = self._cma
 
-        self._instructions[0x30] = self._unimplemented
+        self._instructions[0x30] = self._nop
         self._instructions[0x31] = self._lxi_sp
         self._instructions[0x32] = self._sta
         self._instructions[0x33] = self._inx
@@ -1504,7 +1503,7 @@ class CPU:
         self._instructions[0x35] = self._dcr
         self._instructions[0x36] = self._mvi_m
         self._instructions[0x37] = self._stc
-        self._instructions[0x38] = self._unimplemented
+        self._instructions[0x38] = self._nop
         self._instructions[0x39] = self._dad_sp
         self._instructions[0x3A] = self._lda
         self._instructions[0x3B] = self._dcx
