@@ -18,14 +18,15 @@ class Emulator:
       1. Press 'c' key to insert coin
       2. Press '1' key to choose 1 player
       3. Press '2' key to choose 2 players
-      4. Press arrow keys to move
+      4. Press arrow keys to move (either player)
       5. Press 'Space' to shoot
 
     Cheats:
-      1. Press 's' to kill player (suicide)
-      2. Press 'k' to kill mobs
+      1. Press 'k' to kill all aliens
+      2. Press 's' to die
       3. Press 'l' to add lives
       4. Press 'x' to break score
+
 
     """
 
