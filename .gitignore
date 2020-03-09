@@ -2,3 +2,8 @@ __pycache__/
 venv/
 .idea/
 *.pyc
+rom/*
+!rom/Place 8080 ROM files here
+saves/*
+sound/*
+!sound/Place Space Invaders sound files 0-8 here
