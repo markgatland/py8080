@@ -17,7 +17,7 @@ python main.py --filename <filename>
 python main.py --state saves/<state file>
 ```
 
-If no filename is provided, defaults to Space Invaders demo.
+If no filename is provided, defaults to Space Invaders demo. (File can be created by concatenating Space Invaders ROM files in the order: invaders.h, invaders.g, invaders.f, invaders.e)
 
 ## Controls
 
