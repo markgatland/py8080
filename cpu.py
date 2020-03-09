@@ -63,7 +63,8 @@ class CPU:
         # ROM + RAM (work RAM and video RAM) = 16384 0x3fff
         self._memory += [0] * (65536 - len(self._memory))
 
-        # Temp cpudiag
+        # CPUDIAG memory edit
+        """
         self._memory[0] = 0xc3
         self._memory[1] = 0
         self._memory[2] = 0x01
@@ -71,6 +72,7 @@ class CPU:
         self._memory[0x59c] = 0xc3
         self._memory[0x59d] = 0xc2
         self._memory[0x59e] = 0x05
+        """
 
     @property
     def memory(self):
