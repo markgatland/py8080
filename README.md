@@ -36,10 +36,7 @@ Cheats:
 
 ### To-do
 
-* Add CP/M print method for CPUDIAG program
-* Fix incorrect Parity flag setting (currently indicates parity instead of *bit* parity)
-* Add jumps/calls for Parity flag
-* Fix Carry arithmetic
+* Make emulator pass CPUDIAG test
 * Add sound
 * Add memory mapping functionality (so .e, .f, .g, etc. files are used instead of a single file)
 

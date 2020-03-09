@@ -10,7 +10,7 @@ def main():
     args = arg_parser.parse_args()
 
 
-    filename = args.filename if args.filename else 'rom/invaders'
+    filename = args.filename if args.filename else 'rom/cpudiag2'
     state = args.state
 
     if state:

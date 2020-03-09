@@ -63,6 +63,15 @@ class CPU:
         # ROM + RAM (work RAM and video RAM) = 16384 0x3fff
         self._memory += [0] * (65536 - len(self._memory))
 
+        # Temp cpudiag
+        self._memory[0] = 0xc3
+        self._memory[1] = 0
+        self._memory[2] = 0x01
+        self._memory[368] = 0x7
+        self._memory[0x59c] = 0xc3
+        self._memory[0x59d] = 0xc2
+        self._memory[0x59e] = 0x05
+
     @property
     def memory(self):
         return self._memory
@@ -205,6 +214,12 @@ class CPU:
         elif self._current_inst == 0xDA:
             # JC
             condition = self._carry
+        elif self._current_inst == 0xE2:
+            # JPO
+            condition = not self._parity
+        elif self._current_inst == 0xEA:
+            # JPE
+            condition = self._parity
         elif self._current_inst == 0xF2:
             # JP
             condition = not self._sign
@@ -272,6 +287,20 @@ class CPU:
         self.write_byte(self._hl, self.fetch_rom_next_byte())
         self._cycles += 10
 
+    def _cpm_print(self):
+        if self._c == 9:
+            offset = (self._d << 8) | (self._e)
+            string = self._memory[offset+4]
+            print()
+            while chr(string) != '$':
+                print(chr(string), end="")
+                offset += 1
+                string = self._memory[offset+4]
+            self._pc -= 1
+        elif self._c == 2:
+            print(chr(self._e),end="")
+            self._pc -= 1
+
     def _call(self):
         """
         Unconditional subroutine call
@@ -285,8 +314,11 @@ class CPU:
 
         if self._current_inst == 0xCD:
             # CALL adr	3		(SP-1)<-PC.hi;(SP-2)<-PC.lo;SP<-SP+2;PC=adr
-            self._stack_push(self._pc)
-            self._pc = data_16
+            if data_16 == 5:
+                self._cpm_print()
+            else:
+                self._stack_push(self._pc)
+                self._pc = data_16
             self._cycles += 6
             return
         elif self._current_inst == 0xC4:
@@ -298,10 +330,21 @@ class CPU:
             condition = not self._carry
         elif self._current_inst == 0xDC:
             condition = self._carry
+        elif self._current_inst == 0xE4:
+            condition = not self._parity
+        elif self._current_inst == 0xEC:
+            condition = self._parity
+        elif self._current_inst == 0xF4:
+            condition = not self._sign
+        elif self._current_inst == 0xFC:
+            condition = self._sign
 
         if condition:
-            self._stack_push(self._pc)
-            self._pc = data_16
+            if data_16 == 5:
+                self._cpm_print()
+            else:
+                self._stack_push(self._pc)
+                self._pc = data_16
             self._cycles += 7
 
     def _ret(self):
@@ -326,6 +369,14 @@ class CPU:
             condition = not self._carry
         elif self._current_inst == 0xD8:
             condition = self._carry
+        elif self._current_inst == 0xE0:
+            condition = not self._parity
+        elif self._current_inst == 0xE8:
+            condition = self._parity
+        elif self._current_inst == 0xF0:
+            condition = not self._sign
+        elif self._current_inst == 0xF8:
+            condition = self._sign
 
         if condition:
             self._pc = self._stack_pop()
@@ -881,6 +932,37 @@ class CPU:
 
         self._cycles += 4
 
+    def _sbb(self):
+        """
+        Subtract register from A with carry
+
+        :return:
+        """
+
+        carry = 1 if self._carry else 0
+        if self._current_inst == 0x9F:
+            self.__sub(self._a, carry)
+        elif self._current_inst == 0x98:
+            self.__sub(self._b, carry)
+        elif self._current_inst == 0x99:
+            self.__sub(self._c, carry)
+        elif self._current_inst == 0x9A:
+            self.__sub(self._d, carry)
+        elif self._current_inst == 0x9B:
+            self.__sub(self._e, carry)
+        elif self._current_inst == 0x9C:
+            self.__sub(self._h, carry)
+        elif self._current_inst == 0x9D:
+            self.__sub(self._l, carry)
+        elif self._current_inst == 0x9E:
+            self.__sub(self.read_byte(self._hl), carry)
+            self._cycles += 3
+        elif self._current_inst == 0x9E:
+            self.__sub(self.fetch_rom_next_byte(), carry)
+            self._cycles += 3
+
+        self._cycles += 4
+
     def _sbbi(self):
         """
         Subtract immediate with borrow
@@ -1162,7 +1244,7 @@ class CPU:
 
         self._zero = True if self._a == 0 else False
         self._sign = True if (self._a & 0x80) > 0 else False
-        self._parity = True if self._a % 2 == 0 else False
+        self._parity = True if self.parity(self._a) else False
         self._cycles += 4
 
     def _cma(self):
@@ -1232,7 +1314,7 @@ class CPU:
         self._zero = True if value == 0 else False
         self._sign = True if (value & 0x80) > 0 else False
         self._half_carry = True if data == 0x0F else False
-        self._parity = True if value % 2 == 0 else False
+        self._parity = True if self.parity(value) else False
         return value
 
     def _decr(self, data):
@@ -1242,7 +1324,7 @@ class CPU:
         self._half_carry = True if (data & 0x0F) == 0 else False
         self._sign = True if (value & 0x80) > 0 else False
         self._zero = True if value == 0 else False
-        self._parity = True if value % 2 == 0 else False
+        self._parity = True if self.parity(value) else False
         return value
 
     def _and(self, value):
@@ -1253,21 +1335,21 @@ class CPU:
         self._carry = False
         self._zero = True if self._a == 0 else False
         self._sign = True if self._a & 0x80 > 0 else False
-        self._parity = True if self._a % 2 == 0 else False
+        self._parity = True if self.parity(self._a) else False
 
     def _xor(self, value):
         self._a = self._a ^ value
         self._carry = False
         self._zero = True if self._a == 0 else False
         self._sign = True if self._a & 0x80 > 0 else False
-        self._parity = True if self._a % 2 == 0 else False
+        self._parity = True if self.parity(self._a) else False
 
     def _or(self, value):
         self._a = self._a | value
         self._carry = False
         self._zero = True if self._a == 0 else False
         self._sign = True if self._a & 0x80 > 0 else False
-        self._parity = True if self._a % 2 == 0 else False
+        self._parity = True if self.parity(self._a) else False
 
     def __add(self, in_value, carry=0):
         value = self._a + in_value + carry
@@ -1281,10 +1363,10 @@ class CPU:
         self._carry = True if value > 255 or value < 0 else False
         self._sign = True if self._a & 0x80 > 0 else False
         self._zero = True if self._a == 0 else False
-        self._parity = True if self._a % 2 == 0 else False
+        self._parity = True if self.parity(self._a) else False
 
     def __sub(self, in_value, carry=0):
-        value = self._a - in_value + carry
+        value = self._a - in_value - carry
         x = value & 0xFF
 
         if ((self._a ^ value) ^ in_value) & 0x10 > 0:
@@ -1296,7 +1378,7 @@ class CPU:
         self._a = value & 0xFF
         self._sign = True if x & 0x80 > 0 else False
         self._zero = True if x == 0 else False
-        self._parity = True if x % 2 == 0 else False
+        self._parity = True if self.parity(x) else False
 
     def _cmp_sub(self, in_value):
         value = self._a - in_value
@@ -1308,7 +1390,7 @@ class CPU:
 
         self._zero = True if value & 0xFF == 0 else False
         self._sign = True if (value & 0x80) > 0 else False
-        self._parity = True if value % 2 == 0 else False
+        self._parity = True if self.parity(value) else False
 
     def _stack_push(self, data):
         if data > 0xFFFF:
@@ -1352,6 +1434,13 @@ class CPU:
         data = (self._memory[self._pc + 1] << 8) + self._memory[self._pc]
         self._pc += 2
         return data
+
+    def parity(self, in_value):
+        count = 0
+        for i in range(0, 8):
+            if in_value & (1 << i):
+                count += 1
+        return count % 2 == 0
 
     def init_instruction_table(self):
         self._instructions[0x00] = self._nop
@@ -1515,14 +1604,14 @@ class CPU:
         self._instructions[0x95] = self._sub
         self._instructions[0x96] = self._sub
         self._instructions[0x97] = self._sub
-        self._instructions[0x98] = self._unimplemented
-        self._instructions[0x99] = self._unimplemented
-        self._instructions[0x9A] = self._unimplemented
-        self._instructions[0x9B] = self._unimplemented
-        self._instructions[0x9C] = self._unimplemented
-        self._instructions[0x9D] = self._unimplemented
-        self._instructions[0x9E] = self._unimplemented
-        self._instructions[0x9F] = self._unimplemented
+        self._instructions[0x98] = self._sbb
+        self._instructions[0x99] = self._sbb
+        self._instructions[0x9A] = self._sbb
+        self._instructions[0x9B] = self._sbb
+        self._instructions[0x9C] = self._sbb
+        self._instructions[0x9D] = self._sbb
+        self._instructions[0x9E] = self._sbb
+        self._instructions[0x9F] = self._sbb
 
         self._instructions[0xA0] = self._ana
         self._instructions[0xA1] = self._ana
@@ -1592,36 +1681,36 @@ class CPU:
         self._instructions[0xDE] = self._sbbi
         self._instructions[0xDF] = self._rst
 
-        self._instructions[0xE0] = self._unimplemented
+        self._instructions[0xE0] = self._ret
         self._instructions[0xE1] = self._pop_hl
-        self._instructions[0xE2] = self._unimplemented
+        self._instructions[0xE2] = self._jmp
         self._instructions[0xE3] = self._xthl
-        self._instructions[0xE4] = self._unimplemented
+        self._instructions[0xE4] = self._call
         self._instructions[0xE5] = self._push
         self._instructions[0xE6] = self._ani
         self._instructions[0xE7] = self._rst
-        self._instructions[0xE8] = self._unimplemented
+        self._instructions[0xE8] = self._ret
         self._instructions[0xE9] = self._pchl
-        self._instructions[0xEA] = self._unimplemented
+        self._instructions[0xEA] = self._jmp
         self._instructions[0xEB] = self._xchg
-        self._instructions[0xEC] = self._unimplemented
+        self._instructions[0xEC] = self._call
         self._instructions[0xED] = self._unimplemented
         self._instructions[0xEE] = self._xri
         self._instructions[0xEF] = self._rst
 
-        self._instructions[0xF0] = self._unimplemented
+        self._instructions[0xF0] = self._ret
         self._instructions[0xF1] = self._pop_flags
         self._instructions[0xF2] = self._jmp
         self._instructions[0xF3] = self._di
-        self._instructions[0xF4] = self._unimplemented
+        self._instructions[0xF4] = self._call
         self._instructions[0xF5] = self._push
         self._instructions[0xF6] = self._ori
         self._instructions[0xF7] = self._rst
-        self._instructions[0xF8] = self._unimplemented
+        self._instructions[0xF8] = self._ret
         self._instructions[0xF9] = self._unimplemented
         self._instructions[0xFA] = self._jmp
         self._instructions[0xFB] = self._ei
-        self._instructions[0xFC] = self._unimplemented
+        self._instructions[0xFC] = self._call
         self._instructions[0xFD] = self._nop
         self._instructions[0xFE] = self._cmp
         self._instructions[0xFF] = self._rst
