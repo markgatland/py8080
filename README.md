@@ -3,9 +3,7 @@
 
 ![Screenshot](https://i.imgur.com/OBVL5ez.png "Screenshot")
 
-py8080, modified to include a resizable window and TV/Midway colours.
-
-I started off by writing my own Intel 8080 emulator in Python, and although it works it isn't really worth sharing on GitHub (it achieves the same results as [matthewmpalen](https://github.com/matthewmpalen/py8080)'s emulator, but has a seperate method for almost every opcode). Making my own helped me understand things, but rather than try to refactor that code into something that will eventually resemble an existing project, I decided I'd be better off building upon the existing project in question.
+py8080, upgraded to include a resizable window and TV/Midway colours for Space Invaders. I've also implemented the remaining CPU instructions, so it now passes the CPUDIAG.asm test.
 
 ## Usage
 
@@ -39,13 +37,10 @@ Cheats:
 
 * Resizable window that maintains aspect ratio
 * Simulated colour strips in the TV/Midway versions of the game
-* Print method for use with CPUDIAG test
-* Carry flag is correctly set
-* Implemented remaining jmp/call/ret instructions
-
+* Print method for use with CPUDIAG test (be sure to load this in starting at memory location `0x100`)
+* Implemented remaining instructions and fixed errors
 
 ### To-do
 
-* Make emulator pass CPUDIAG test
 * Add sound
 * Add memory mapping functionality (so .e, .f, .g, etc. files are used instead of a single file)
