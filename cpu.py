@@ -63,17 +63,6 @@ class CPU:
         # ROM + RAM (work RAM and video RAM) = 16384 0x3fff
         self._memory += [0] * (65536 - len(self._memory))
 
-        # CPUDIAG memory edit
-        """
-        self._memory[0] = 0xc3
-        self._memory[1] = 0
-        self._memory[2] = 0x01
-        self._memory[368] = 0x7
-        self._memory[0x59c] = 0xc3
-        self._memory[0x59d] = 0xc2
-        self._memory[0x59e] = 0x05
-        """
-
     @property
     def memory(self):
         return self._memory
@@ -629,7 +618,7 @@ class CPU:
         elif self._current_inst == 0x23:
             self.set_hl(self._hl + 1)
         elif self._current_inst == 0x33:
-            self._sp = (self._sp + 1) & 0xFF
+            self._sp = (self._sp + 1) # & 0xFF
 
         self._cycles += 6
 
@@ -667,7 +656,7 @@ class CPU:
         elif self._current_inst == 0x2B:
             self.set_hl(self._hl - 1)
         elif self._current_inst == 0x3B:
-            self._sp = (self._sp - 1) & 0xFF
+            self._sp = (self._sp - 1) # & 0xFF
         else:
             raise InvalidInstruction('DCX: {}'.format(self._current_inst))
 
@@ -1074,6 +1063,16 @@ class CPU:
         self._pc = self._hl
         self._cycles += 4
 
+    def _sphl(self):
+        """
+        Set SP to address in HL
+
+        :return:
+        """
+
+        self._sp = self._hl
+        self._cycles += 4
+
     def _rst(self):
         """
         Restart
@@ -1238,12 +1237,10 @@ class CPU:
         if (self._a & 0x0F) > 9 or self._half_carry:
             self._a += 0x06
             self._half_carry = True
-
         if (self._a > 0x9F) or self._carry:
             self._a += 0x60
             self._carry = True
-
-        self._zero = True if self._a == 0 else False
+        self._zero = True if self._a & 0xf == 0 else False
         self._sign = True if (self._a & 0x80) > 0 else False
         self._parity = True if self.parity(self._a) else False
         self._cycles += 4
@@ -1708,10 +1705,10 @@ class CPU:
         self._instructions[0xF6] = self._ori
         self._instructions[0xF7] = self._rst
         self._instructions[0xF8] = self._ret
-        self._instructions[0xF9] = self._unimplemented
+        self._instructions[0xF9] = self._sphl
         self._instructions[0xFA] = self._jmp
         self._instructions[0xFB] = self._ei
         self._instructions[0xFC] = self._call
-        self._instructions[0xFD] = self._nop
+        self._instructions[0xFD] = self._unimplemented
         self._instructions[0xFE] = self._cmp
         self._instructions[0xFF] = self._rst
