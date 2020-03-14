@@ -8,14 +8,20 @@ py8080, upgraded to include a resizable window, audio, and TV/Midway colours for
 ## Usage
 
 ```bash
-python main.py --filename <filename>
+python main.py --rom <name of rom file group>
+
+# or load a single ROM file
+
+python main.py --filename <name of file in rom/ directory>
 
 # or load a save state
 
-python main.py --state saves/<state file>
+python main.py --state <name of state file in saves/ directory>
 ```
 
-If no filename is provided, defaults to Space Invaders demo. (File can be created by concatenating Space Invaders ROM files in the order: invaders.h, invaders.g, invaders.f, invaders.e)
+If no rom/filename is provided, defaults to Space Invaders. Place the ROM files (invaders.h, invaders.g etc) in the `rom/` directory.
+
+Avaliable ROMs are `space_invaders`, `lunar_rescue` and `balloon_bomber`. 
 
 Provide sound files in `sound/` folder, these are .wav files that can be found on the internet named `0.wav` through `18.wav`, although only 0-8 are required.
 
@@ -40,9 +46,11 @@ Cheats:
 * Simulated colour strips from the TV/Midway versions of Space Invaders
 * Simulated audio from Space Invaders
 * Resizable window that maintains aspect ratio
-* Print method for use with CPUDIAG test (be sure to load this in starting at memory location `0x100`)
+* Print method for use with CPUDIAG test and other CP/M software
 * Implemented remaining instructions and fixed errors
+* Added memory maps for three games, so ROM files (invaders.h, invaders.g etc) don't need to be concatenated
 
-### To-do
+### Notes
 
-* Add memory mapping functionality (so .e, .f, .g, etc. files are used instead of a single file)
+* Screen colours for games other than Space Invaders will be incorrect
+* Balloon Bomber plays fine, but halts during attract mode
