@@ -3,7 +3,7 @@
 
 ![Screenshot](https://i.imgur.com/OBVL5ez.png "Screenshot")
 
-py8080, upgraded to include a resizable window and TV/Midway colours for Space Invaders. I've also implemented the remaining CPU instructions, so it now passes the CPUDIAG.asm test.
+py8080, upgraded to include a resizable window, audio, and TV/Midway colours for Space Invaders. I've also implemented the remaining CPU instructions, so it passes the CPUDIAG.asm test.
 
 ## Usage
 
@@ -16,6 +16,8 @@ python main.py --state saves/<state file>
 ```
 
 If no filename is provided, defaults to Space Invaders demo. (File can be created by concatenating Space Invaders ROM files in the order: invaders.h, invaders.g, invaders.f, invaders.e)
+
+Provide sound files in `sound/` folder, these are .wav files that can be found on the internet named `0.wav` through `18.wav`, although only 0-8 are required.
 
 ## Controls
 
@@ -35,12 +37,12 @@ Cheats:
 
 ### Added features
 
+* Simulated colour strips from the TV/Midway versions of Space Invaders
+* Simulated audio from Space Invaders
 * Resizable window that maintains aspect ratio
-* Simulated colour strips in the TV/Midway versions of the game
 * Print method for use with CPUDIAG test (be sure to load this in starting at memory location `0x100`)
 * Implemented remaining instructions and fixed errors
 
 ### To-do
 
-* Add sound
 * Add memory mapping functionality (so .e, .f, .g, etc. files are used instead of a single file)
