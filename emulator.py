@@ -258,7 +258,7 @@ class Emulator:
         :return:
         """
 
-        with open(state, 'rb') as state_file:
+        with open("saves/" + state, 'rb') as state_file:
             cpu = pickle.load(state_file)
 
         emu = cls()
