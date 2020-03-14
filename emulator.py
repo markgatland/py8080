@@ -5,6 +5,7 @@ import cpu
 import pickle
 import time
 import ctypes
+import os
 
 MIN_WIDTH = 256
 MIN_HEIGHT = 224
@@ -87,6 +88,33 @@ class Emulator:
                         self._px_array[i][y] = self.BLACK
 
                     vram >>= 1
+
+    def _play_audio(self):
+        if self._cpu.io.out_port3 != self._last_port3:
+            if self._repeating_sound and self._cpu.io.out_port3 & 0x1 and not (self._last_port3 & 0x1):
+                pygame.mixer.music.play(-1)
+            elif self._repeating_sound and not (self._cpu.io.out_port3 & 0x1) and self._last_port3 & 0x1:
+                pygame.mixer.music.stop()
+            if self._sounds[0] and self._cpu.io.out_port3 & 0x2 and not (self._last_port3 & 0x2):
+                self._main_audio.play(self._sounds[0])
+            if self._sounds[1] and self._cpu.io.out_port3 & 0x4 and not (self._last_port3 & 0x4):
+                self._main_audio.play(self._sounds[1])
+            if self._sounds[2] and self._cpu.io.out_port3 & 0x8 and not (self._last_port3 & 0x8):
+                self._main_audio.play(self._sounds[2])
+            self._last_port3 = self._cpu.io.out_port3
+
+        if self._cpu.io.out_port5 != self._last_port5:
+            if self._sounds[3] and self._cpu.io.out_port5 & 0x1 and not (self._last_port5 & 0x1):
+                self._main_audio.play(self._sounds[3])
+            if self._sounds[4] and self._cpu.io.out_port5 & 0x2 and not (self._last_port5 & 0x2):
+                self._main_audio.play(self._sounds[4])
+            if self._sounds[5] and self._cpu.io.out_port5 & 0x4 and not (self._last_port5 & 0x4):
+                self._main_audio.play(self._sounds[5])
+            if self._sounds[6] and self._cpu.io.out_port5 & 0x8 and not (self._last_port5 & 0x8):
+                self._main_audio.play(self._sounds[6])
+            if self._sounds[7] and self._cpu.io.out_port5 & 0x10 and not (self._last_port5 & 0x10):
+                self._main_audio.play(self._sounds[7])
+            self._last_port5 = self._cpu.io.out_port5
 
     def _handle(self, event):
         if event.type == pygame.QUIT:
@@ -189,6 +217,11 @@ class Emulator:
         """
         ctypes.windll.user32.SetProcessDPIAware()
         pygame.init()
+        self._main_audio = pygame.mixer.Channel(0)
+        self._sounds = []
+        self._repeating_sound = False
+        self._last_port3 = self._cpu.io.out_port3
+        self._last_port5 = self._cpu.io.out_port5
         self._window = pygame.display.set_mode((self._window_width, self._window_height), pygame.RESIZABLE)
         surface = pygame.Surface((self._height, self._width))
         self._scaled_surface = pygame.Surface((self._scaled_height, self._scaled_width))
@@ -197,6 +230,14 @@ class Emulator:
         self._px_array = pygame.PixelArray(surface)
         pygame.display.update()
         fps_clock = pygame.time.Clock()
+        if os.path.exists('sound/0.wav'):
+            pygame.mixer.music.load('sound/0.wav')
+            self._repeating_sound = True
+        for i in range(1,9):
+            if os.path.exists('sound/{0}.wav'.format(i)):
+                self._sounds.append(pygame.mixer.Sound('sound/{0}.wav'.format(i)))
+            else:
+                self._sounds.append(None)
 
         while True:
             for event in pygame.event.get():
@@ -204,6 +245,7 @@ class Emulator:
 
             self._cpu.run()
             self._refresh()
+            self._play_audio()
             fps_clock.tick(self._fps)
             pygame.transform.scale(surface, (self._scaled_height, self._scaled_width), self._scaled_surface)
             horizontal_pos = int((self._window_width - self._scaled_surface.get_width()) / 2)
