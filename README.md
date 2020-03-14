@@ -19,9 +19,9 @@ python main.py --filename <name of file in rom/ directory>
 python main.py --state <name of state file in saves/ directory>
 ```
 
-If no rom/filename is provided, defaults to Space Invaders demo.
+If no rom/filename is provided, defaults to Space Invaders. Place the ROM files (invaders.h, invaders.g etc) in the `rom/` directory.
 
-Avaliable ROMs are `space_invaders`, `lunar_rescue` and `balloon_bomber`. Place the files for each (invaders.h, invaders.g, etc.) in the `rom/` directory.
+Avaliable ROMs are `space_invaders`, `lunar_rescue` and `balloon_bomber`. 
 
 Provide sound files in `sound/` folder, these are .wav files that can be found on the internet named `0.wav` through `18.wav`, although only 0-8 are required.
 
@@ -46,9 +46,9 @@ Cheats:
 * Simulated colour strips from the TV/Midway versions of Space Invaders
 * Simulated audio from Space Invaders
 * Resizable window that maintains aspect ratio
-* Print method for use with CPUDIAG test (be sure to load this in starting at memory location `0x100`)
+* Print method for use with CPUDIAG test and other CP/M software
 * Implemented remaining instructions and fixed errors
-* Added memory maps for three games, so ROM files (eg. invaders.h, invaders.g) don't need to be concatenated
+* Added memory maps for three games, so ROM files (invaders.h, invaders.g etc) don't need to be concatenated
 
 ### Notes
 
