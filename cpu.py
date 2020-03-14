@@ -19,7 +19,7 @@ logger = logging.getLogger('cpu')
 class CPU:
     VRAM_ADDRESS = 0x2400
 
-    def __init__(self, path):
+    def __init__(self, path=None, rom=None):
         self._pc = 0
         self._sp = 0xF000  # Stack Pointer
 
@@ -51,15 +51,17 @@ class CPU:
         self.io = io8080.IO()
 
         self._memory = []
-        with open(path, 'rb') as f:
-            while True:
-                byte = f.read(1)
-                if not byte:
-                    break
+        if path:
+            with open('rom/' + path, 'rb') as f:
+                while True:
+                    byte = f.read(1)
+                    if not byte:
+                        break
 
-                a, = struct.unpack('c', byte)
-                self._memory.append(ord(a))
-
+                    a, = struct.unpack('c', byte)
+                    self._memory.append(ord(a))
+        elif rom:
+            self._memory = rom
         # ROM + RAM (work RAM and video RAM) = 16384 0x3fff
         self._memory += [0] * (65536 - len(self._memory))
 

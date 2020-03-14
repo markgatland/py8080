@@ -1,11 +1,12 @@
-import pygame
-
-from cheats import SpaceInvadersCheatEngine
-import cpu
-import pickle
+import os
 import time
 import ctypes
-import os
+import struct
+import pygame
+import pickle
+
+import cpu
+from cheats import SpaceInvadersCheatEngine
 
 MIN_WIDTH = 256
 MIN_HEIGHT = 224
@@ -37,10 +38,39 @@ class Emulator:
     GREEN = (0, 255, 0)
     ASPECT_RATIO = MIN_WIDTH / MIN_HEIGHT
     CAPTION_FORMAT = 'Py8080: {}'
+    MEMORY_MAPS = {
+        "space_invaders": [
+            (0x0000, "invaders.h"),
+            (0x0800, "invaders.g"),
+            (0x1000, "invaders.f"),
+            (0x1800, "invaders.e")
+        ],
 
-    def __init__(self, path=None, width=MIN_WIDTH):
+        "lunar_rescue": [
+            (0x0000, "lrescue.1"),
+            (0x0800, "lrescue.2"),
+            (0x1000, "lrescue.3"),
+            (0x1800, "lrescue.4"),
+            (0x4000, "lrescue.5"),
+            (0x4800, "lrescue.6")
+        ],
+
+        "balloon_bomber": [
+            (0x0000, "tn01"),
+            (0x0800, "tn02"),
+            (0x1000, "tn03"),
+            (0x1800, "tn04"),
+            (0x4000, "tn05-1")
+        ]
+    }
+
+    def __init__(self, path=None, mapname=None, width=MIN_WIDTH):
         if path:
-            self._cpu = cpu.CPU(path)
+            self._cpu = cpu.CPU(path=path)
+            self._cpu.init_instruction_table()
+            self._cheats = SpaceInvadersCheatEngine(self._cpu.memory)
+        elif mapname:
+            self._cpu = cpu.CPU(rom=self._create_memory(mapname))
             self._cpu.init_instruction_table()
             self._cheats = SpaceInvadersCheatEngine(self._cpu.memory)
         else:
@@ -57,6 +87,25 @@ class Emulator:
         self._window_height = self._width
         self._px_array = None
         self._fps = 60
+
+    def _create_memory(self, mapname):
+        """
+        Concatenate files to correct locations in memory
+
+        :return: Array of integers
+        """
+        memory = []
+        for t in self.MEMORY_MAPS[mapname]:
+            while len(memory) < t[0]:
+                memory.append(0)
+            with open('rom/'+t[1], 'rb') as f:
+                while True:
+                    byte = f.read(1)
+                    if not byte:
+                        break
+                    a, = struct.unpack('c', byte)
+                    memory.append(ord(a))
+        return memory
 
     def _refresh(self):
         """
@@ -174,11 +223,15 @@ class Emulator:
             self._scaled_width = self._window_height
             self._scaled_height = self._window_width
             if self._window_width/self._window_height > self._height/self._width:
-                self._scaled_height = int(self._window_height * self._height/self._width)
+                self._scaled_height = int(
+                    self._window_height * self._height/self._width)
             if self._window_width/self._window_height < self._height/self._width:
-                self._scaled_width = int(self._window_width * self._width/self._height)
-            self._window = pygame.display.set_mode((self._window_width, self._window_height), pygame.RESIZABLE)
-            self._scaled_surface = pygame.Surface((self._scaled_height, self._scaled_width))
+                self._scaled_width = int(
+                    self._window_width * self._width/self._height)
+            self._window = pygame.display.set_mode(
+                (self._window_width, self._window_height), pygame.RESIZABLE)
+            self._scaled_surface = pygame.Surface(
+                (self._scaled_height, self._scaled_width))
 
     def save(self):
         """
@@ -222,9 +275,11 @@ class Emulator:
         self._repeating_sound = False
         self._last_port3 = self._cpu.io.out_port3
         self._last_port5 = self._cpu.io.out_port5
-        self._window = pygame.display.set_mode((self._window_width, self._window_height), pygame.RESIZABLE)
+        self._window = pygame.display.set_mode(
+            (self._window_width, self._window_height), pygame.RESIZABLE)
         surface = pygame.Surface((self._height, self._width))
-        self._scaled_surface = pygame.Surface((self._scaled_height, self._scaled_width))
+        self._scaled_surface = pygame.Surface(
+            (self._scaled_height, self._scaled_width))
         caption = self.CAPTION_FORMAT.format(self._path if self._path else '')
         pygame.display.set_caption(caption)
         self._px_array = pygame.PixelArray(surface)
@@ -233,9 +288,10 @@ class Emulator:
         if os.path.exists('sound/0.wav'):
             pygame.mixer.music.load('sound/0.wav')
             self._repeating_sound = True
-        for i in range(1,9):
+        for i in range(1, 9):
             if os.path.exists('sound/{0}.wav'.format(i)):
-                self._sounds.append(pygame.mixer.Sound('sound/{0}.wav'.format(i)))
+                self._sounds.append(pygame.mixer.Sound(
+                    'sound/{0}.wav'.format(i)))
             else:
                 self._sounds.append(None)
 
@@ -247,8 +303,12 @@ class Emulator:
             self._refresh()
             self._play_audio()
             fps_clock.tick(self._fps)
-            pygame.transform.scale(surface, (self._scaled_height, self._scaled_width), self._scaled_surface)
-            horizontal_pos = int((self._window_width - self._scaled_surface.get_width()) / 2)
-            vertical_pos = int((self._window_height - self._scaled_surface.get_height()) / 2)
-            self._window.blit(self._scaled_surface, (horizontal_pos, vertical_pos))
+            pygame.transform.scale(
+                surface, (self._scaled_height, self._scaled_width), self._scaled_surface)
+            horizontal_pos = int(
+                (self._window_width - self._scaled_surface.get_width()) / 2)
+            vertical_pos = int(
+                (self._window_height - self._scaled_surface.get_height()) / 2)
+            self._window.blit(self._scaled_surface,
+                              (horizontal_pos, vertical_pos))
             pygame.display.update()
