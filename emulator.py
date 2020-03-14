@@ -39,6 +39,10 @@ class Emulator:
     ASPECT_RATIO = MIN_WIDTH / MIN_HEIGHT
     CAPTION_FORMAT = 'Py8080: {}'
     MEMORY_MAPS = {
+        "cpudiag": [
+            (0x0100, "cpudiag")
+        ],
+
         "space_invaders": [
             (0x0000, "invaders.h"),
             (0x0800, "invaders.g"),

@@ -12,6 +12,8 @@ def main():
 
     rom = args.rom
     filename = args.filename
+    if not rom or filename:
+        rom = 'space_invaders'
     state = args.state
 
     if state:
